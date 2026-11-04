@@ -8,6 +8,7 @@ paths:
 
 # Exploratory thresholds: nothing is expected to pass FDR with 2 vs 2 animals.
 thresholds:
+  min_rowmean: 50         # keep genes with mean count >= this across the ROI type's ROIs
   fdr: 0.05
   fdr_original: 0.01      # cutoff used in the original ROI-as-sample analysis, for comparison
   nominal_p: 0.05

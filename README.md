@@ -17,9 +17,21 @@ ROIs from the same animal are correlated, so 16 periportal ROIs from 4 mice are 
 | `voom_dupCor_ROIs` | ROI, with animal as a correlated block (limma `duplicateCorrelation`) | sensitivity analysis |
 | `pseudobulk_edgeR_animals` | animal (ROI counts summed per animal; edgeR quasi-likelihood F-test) | **primary** |
 
-Shared choices: upper-quartile (Q3) normalization, the GeoMx standard; `filterByExpr` gene filtering; Alcohol-Treated vs. Control contrast; effect size (log2FC) reported with every p-value; Benjamini-Hochberg FDR.
+Shared choices: upper-quartile (Q3) normalization, the GeoMx standard; a mean-count filter (`thresholds: min_rowmean` in the config, default 50: keep genes whose mean count across an ROI type's ROIs is >= 50) followed by `filterByExpr`; Alcohol-Treated vs. Control contrast; effect size (log2FC) reported with every p-value; Benjamini-Hochberg FDR.
 
 Additional checks: PCA with variance explained by animal vs. treatment (`results/qc/`), and a **label-swap check** (`R/05_label_swap_check.R`) that reruns the pseudobulk model on the two *wrong* animal pairings. Genes called significant there are false positives, which calibrates how far to trust FDR from the true split.
+
+## Gene filtering
+
+`R/06_filter_sensitivity.R` reruns the primary model at mean-count cutoffs of 0, 10, 20, 30, 50 and 100 (`results/filter_sensitivity.csv`). The cutoff matters most in the liver:
+
+| ROI type | genes kept at 30 / 50 / 100 | pseudobulk FDR < 0.05 at 30 / 50 / 100 |
+|---|---|---|
+| periportal | 19724 / 13982 / 7117 | 10 / 0 / 0 |
+| perivenous | 19929 / 17423 / 8580 | 166 / 34 / 0 |
+| plaqueHippo | 19961 / 19951 / 17814 | 2295 / 2298 / 2142 |
+
+For the original ROI-as-sample DESeq2 model, `rowMeans >= 30` gives 189 periportal DEGs and `rowMeans >= 50` gives 97 plaque-bearing hippocampus DEGs, matching the original README. Perivenous (802 DEGs, 17,325 genes) could not be matched exactly: 802 genes was not reached at any cutoff tried (804-805 at 10-30), and `rowMeans >= 50` keeps 17,423 genes.
 
 ## Run
 
