@@ -23,7 +23,7 @@ According to the GEO record, the sequencing reads were processed with the GeoMx 
 
 Starting from those counts, this pipeline follows the standard GeoMx workflow from NanoString's GeomxTools package.
 
-1. **ROI quality control.** Each ROI is given a limit of quantification (LOQ), which is the larger of 2 and its `NegProbe-WTX` count. Any ROI that detects fewer than 10% of genes above its LOQ is removed. Every ROI in this study passed this check.
+1. **ROI quality control.** Every GeoMx ROI also measures negative probes, which are designed to match sequences that do not exist in the mouse genome. Any counts these probes pick up are background noise, so they show how many counts a gene can receive by chance alone. The limit of quantification (LOQ) uses this background to set a cutoff for each ROI. A gene must have more counts than the LOQ before its signal is trusted as real expression. Here the LOQ is the larger of 2 and the ROI's `NegProbe-WTX` count. For example, if an ROI has a `NegProbe-WTX` count of 100, a gene with 80 counts in that ROI is treated as not detected. Any ROI that detects fewer than 10% of genes above its LOQ is removed. Every ROI in this study passed this check.
 2. **Gene filtering.** A gene is kept for an ROI type when it is above the LOQ in at least 10% of that type's ROIs. The remaining genes then pass through the edgeR `filterByExpr` function.
 3. **Normalization.** Counts are normalized with the upper quartile (Q3) method, which is the GeoMx standard.
 4. **Differential expression.** Each model compares the mice fed alcohol with the controls. Every gene is reported with its log2 fold change and p value, and p values are adjusted with the Benjamini Hochberg false discovery rate (FDR). The second model, which treats ROIs from the same animal as correlated, matches the linear mixed model that NanoString recommends, where each animal is given its own random intercept.
@@ -34,7 +34,19 @@ The quality control plot in `results/qc/q3_vs_negprobe.png` shows that brain ROI
 
 ## Checking the Results
 
-Two additional checks help judge how much to trust the primary results. First, a PCA for each ROI type measures how much of the variation is explained by the animal compared with the treatment. Second, a label swap check reruns the pseudobulk model using the two incorrect ways of pairing the mice. Because those groupings have no biological meaning, any gene they call significant is a false positive. Comparing these numbers with the true grouping shows whether the true result stands out from chance.
+Two additional checks help judge how much to trust the primary results. First, a PCA for each ROI type measures how much of the variation is explained by the animal compared with the treatment.
+
+Second, a label swap check tests whether the model finds differences even when there is no real treatment effect. With four mice, there are only three ways to split them into two groups of two.
+
+| Pairing | Group 1 | Group 2 | What the groups contain |
+|---|---|---|---|
+| True | 6868 + 6870 | 6876 + 6880 | Mice fed alcohol compared with controls |
+| Incorrect 1 | 6868 + 6876 | 6870 + 6880 | One alcohol mouse and one control in each group |
+| Incorrect 2 | 6868 + 6880 | 6870 + 6876 | One alcohol mouse and one control in each group |
+
+In both incorrect pairings, each group contains one mouse fed alcohol and one control. The two groups therefore have no treatment difference between them. If the model still calls genes significant in these comparisons, those genes reflect natural differences between individual mice rather than an effect of alcohol, which makes them false positives.
+
+The script `R/05_label_swap_check.R` reruns the pseudobulk model on each incorrect pairing and counts the significant genes. This count shows how many genes can appear significant by chance in each ROI type. A true result can only be trusted when it produces clearly more significant genes than the incorrect pairings do.
 
 ## Results
 
