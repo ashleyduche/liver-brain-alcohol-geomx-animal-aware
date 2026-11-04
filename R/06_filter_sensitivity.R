@@ -1,4 +1,4 @@
-# How many genes survive each rowMeans cutoff, and how many pass FDR in the pseudobulk model.
+# How many genes pass each mean count cutoff, and how many reach FDR in the pseudobulk model
 cutoffs <- c(0, 10, 20, 30, 50, 100)
 filter_sens <- tibble()
 
@@ -8,6 +8,8 @@ for (roi_name in names(cfg$rois)) {
   for (cutoff in cutoffs) {
     roi_data <- subset_roi(meta, counts, roi_def, min_rowmean = cutoff)
     coldata  <- roi_data$coldata
+
+    # Sum the ROI counts for each animal
     animal_f <- factor(coldata$animal)
     pb_counts <- roi_data$counts %*% model.matrix(~ 0 + animal_f)
     colnames(pb_counts) <- levels(animal_f)
@@ -17,16 +19,17 @@ for (roi_name in names(cfg$rois)) {
     yb <- yb[filterByExpr(yb, group = pb_group$Group), , keep.lib.sizes = FALSE]
     yb <- calcNormFactors(yb, method = "upperquartile")
     design_pb <- model.matrix(~ Group, data = pb_group)
+
     yb <- estimateDisp(yb, design_pb, robust = TRUE)
     fit_pb <- glmQLFit(yb, design_pb, robust = TRUE)
     tt <- topTags(glmQLFTest(fit_pb, coef = 2), n = Inf, sort.by = "none")$table
 
     filter_sens <- bind_rows(filter_sens, tibble(
       roi = roi_name, min_rowmean = cutoff,
-      genes_kept  = nrow(roi_data$counts),
+      genes_kept   = nrow(roi_data$counts),
       genes_tested = nrow(tt),
-      n_nominal_p = sum(tt$PValue < cfg$thresholds$nominal_p),
-      n_fdr       = sum(tt$FDR < cfg$thresholds$fdr)))
+      n_nominal_p  = sum(tt$PValue < cfg$thresholds$nominal_p),
+      n_fdr        = sum(tt$FDR < cfg$thresholds$fdr)))
   }
 }
 
