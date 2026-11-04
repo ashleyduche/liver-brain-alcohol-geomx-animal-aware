@@ -1,40 +1,46 @@
-# Animal-aware GeoMx DGE: alcohol exposure in APP/PS1 liver and brain
+# APP/PS1 Alcohol Liver and Brain Spatial Transcriptomics: Animal Level Analysis
 
-Data: GEO [GSE324193](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE324193). Re-analysis of a GeoMx whole-transcriptome spatial dataset (APP/PS1 mice, intragastric alcohol vs. control, 5 weeks; brain plaque-bearing/plaque-free cortex and hippocampus, liver periportal/perivenous) that treats the **animal**, not the ROI, as the experimental unit. ROIs are aggregated per animal (**pseudobulk**), which avoids pseudoreplication.
+This repository contains a reanalysis of the GeoMx spatial transcriptomics data published on GEO under [GSE324193](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE324193). The study profiled the liver and brain of APP/PS1 mice that were fed alcohol intragastrically for 5 weeks. In the brain, regions of interest (ROIs) were collected from the cortex and hippocampus, both with and without amyloid plaques. In the liver, ROIs were collected from the periportal and perivenous zones.
+
+The original analysis in [liver-brain-alcohol-dge-pipeline](https://github.com/ashleyduche/liver-brain-alcohol-dge-pipeline) treated every ROI as an independent sample. However, ROIs collected from the same mouse are more similar to each other than to ROIs from other mice, so they are not independent replicates. Treating them as independent is called pseudoreplication, and it makes p values look stronger than the data support. To avoid this, this pipeline treats each animal as the replicate. It does so by adding together the counts of all ROIs from the same animal and ROI type, which is an approach called pseudobulk.
 
 > [!WARNING]
-> **Exploratory analysis.** The study has **4 animals (2 control, 2 alcohol-treated)**. With n = 2 vs. 2 there are only 6 possible group labelings, so no permutation-based animal-level test can reach p < 0.05 (the smallest attainable two-sided p is 2/6 = 0.33). Parametric p-values at this n lean heavily on modeled variance and should be read as a ranking of candidate genes, not as evidence. See [Interpreting the results](#interpreting-the-results).
+> **This is an exploratory analysis.** The study includes four mice, with two controls and two mice fed alcohol. With only two animals per group, there are just six ways to assign the four mice to two groups. As a result, a permutation test can never reach p < 0.05, because the smallest possible p value is 0.33. The p values reported here depend heavily on the statistical model, so they are best used to rank candidate genes rather than as proof of differential expression.
 
-Companion repo: [`liver-brain-alcohol-dge-pipeline`](https://github.com/ashleyduche/liver-brain-alcohol-dge-pipeline) (original analysis, every ROI treated as an independent sample).
+## Analysis Approach
 
-## Why a second analysis
+Each ROI type is analyzed with three models so that their results can be compared directly. The first model repeats the original analysis and is included only for comparison. The second model keeps each ROI as a sample but tells limma that ROIs from the same animal are correlated. The third model is the primary analysis, and it uses pseudobulk counts so that each animal contributes one sample.
 
-ROIs from the same animal are correlated, so 16 periportal ROIs from 4 mice are not 16 independent replicates (pseudoreplication; Lazic et al. 2018, *PLoS Biol*; Zimmerman et al. 2021, *Nat Commun*; Squair et al. 2021, *Nat Commun*). This pipeline runs three models side by side, per ROI type:
-
-| Model | Replicate unit | Role |
+| Model | What counts as a replicate | Role |
 |---|---|---|
-| `naive_DESeq2_ROIs` | each ROI | reproduces the original analysis, for comparison only |
-| `voom_dupCor_ROIs` | ROI, with animal as a correlated block (limma `duplicateCorrelation`) | sensitivity analysis |
-| `pseudobulk_edgeR_animals` | animal (ROI counts summed per animal; edgeR quasi-likelihood F-test) | **primary** |
+| `naive_DESeq2_ROIs` | Each ROI | Repeats the original analysis for comparison |
+| `voom_dupCor_ROIs` | Each ROI, with ROIs from the same animal modeled as correlated (limma `duplicateCorrelation`) | Sensitivity analysis |
+| `pseudobulk_edgeR_animals` | Each animal, with ROI counts summed per animal and tested with the edgeR quasi likelihood F test | **Primary analysis** |
 
 ## Processing
 
-Upstream (as described in GSE324193): GeoMx NGS Pipeline → DCC files → per-ROI digital counts (`RawCounts_AllSamples.csv`, including the aggregated `NegProbe-WTX` background probe). Downstream, this repo follows the standard GeoMx workflow (NanoString GeomxTools):
+According to the GEO record, the sequencing reads were processed with the GeoMx NGS Pipeline to produce DCC files. These files were then converted into a table of raw counts for every ROI, which is the `RawCounts_AllSamples.csv` file in `data/raw/`. That table also includes `NegProbe-WTX`, which measures the background signal from probes that do not target any gene.
 
-1. **ROI QC** — limit of quantification (LOQ) per ROI = max(2, `NegProbe-WTX` count); ROIs with < 10% of genes above LOQ are removed (none were); Q3 signal vs. background is plotted (`results/qc/q3_vs_negprobe.png`).
-2. **Gene filtering** — a gene is kept for an ROI type if it is above LOQ in ≥ 10% of that ROI type's ROIs, then `filterByExpr`.
-3. **Normalization** — upper-quartile (Q3).
-4. **Differential expression** — the three models above; Alcohol-Treated vs. Control; log2FC reported with every p-value; Benjamini-Hochberg FDR. The ROI-level model with animal as a correlated block corresponds to NanoString's recommended linear mixed model with a random intercept per animal/slide.
+Starting from those counts, this pipeline follows the standard GeoMx workflow from NanoString's GeomxTools package.
 
-The `NegProbe-WTX` row in the published counts is already aggregated, so the LOQ uses it directly; the per-probe geometric SD that GeomxTools also uses is not available. All thresholds are in `config.yml` under `geomx:`.
+1. **ROI quality control.** Each ROI is given a limit of quantification (LOQ), which is the larger of 2 and its `NegProbe-WTX` count. Any ROI that detects fewer than 10% of genes above its LOQ is removed. Every ROI in this study passed this check.
+2. **Gene filtering.** A gene is kept for an ROI type when it is above the LOQ in at least 10% of that type's ROIs. The remaining genes then pass through the edgeR `filterByExpr` function.
+3. **Normalization.** Counts are normalized with the upper quartile (Q3) method, which is the GeoMx standard.
+4. **Differential expression.** Each model compares the mice fed alcohol with the controls. Every gene is reported with its log2 fold change and p value, and p values are adjusted with the Benjamini Hochberg false discovery rate (FDR). The second model, which treats ROIs from the same animal as correlated, matches the linear mixed model that NanoString recommends, where each animal is given its own random intercept.
 
-QC note: brain ROIs sit closer to background than liver ROIs (Q3 is about 1.2–1.5× the negative probe in brain vs. up to ~6× in liver), so brain gene-level estimates are noisier.
+The published `NegProbe-WTX` count is already combined across the individual negative probes. Because of this, the LOQ uses that count directly and cannot include the spread between probes that GeomxTools normally adds. All of these thresholds can be changed in `config.yml` under `geomx:`.
 
-Additional checks: PCA with variance explained by animal vs. treatment (`results/qc/`), and a **label-swap check** (`R/05_label_swap_check.R`) that reruns the pseudobulk model on the two *wrong* animal pairings. Genes called significant there are false positives, which calibrates how far to trust FDR from the true split.
+The quality control plot in `results/qc/q3_vs_negprobe.png` shows that brain ROIs sit much closer to background than liver ROIs. In the brain, the Q3 signal is only about 1.2 to 1.5 times the negative probe, while in the liver it reaches about 6 times. Gene level results from the brain are therefore noisier.
 
-## Results (primary pseudobulk model)
+## Checking the Results
 
-| ROI type | genes tested | FDR < 0.05 | FDR < 0.05 under the two wrong animal pairings |
+Two additional checks help judge how much to trust the primary results. First, a PCA for each ROI type measures how much of the variation is explained by the animal compared with the treatment. Second, a label swap check reruns the pseudobulk model using the two incorrect ways of pairing the mice. Because those groupings have no biological meaning, any gene they call significant is a false positive. Comparing these numbers with the true grouping shows whether the true result stands out from chance.
+
+## Results
+
+The table below shows the results from the primary pseudobulk model.
+
+| ROI type | Genes tested | Genes with FDR < 0.05 | Genes with FDR < 0.05 using the two incorrect pairings |
 |---|---|---|---|
 | plaqueCortex | 15570 | 1 | 3 / 1 |
 | nonplaqueCortex | 18549 | 1 | 19 / 8 |
@@ -43,36 +49,36 @@ Additional checks: PCA with variance explained by animal vs. treatment (`results
 | periportal | 19303 | 9 | 823 / 8 |
 | perivenous | 18235 | 78 | 12 / 23 |
 
-Only plaque-bearing hippocampus gives more hits for the true grouping than for wrong groupings by a wide margin. Even there, with 2 animals per group, these are candidates for validation, not confirmed DEGs.
+The plaque bearing hippocampus is the only ROI type where the true grouping produces far more significant genes than the incorrect pairings. In the periportal liver, one incorrect pairing produced 823 significant genes compared with 9 for the true grouping, so those results cannot be trusted. Even in the hippocampus, two animals per group is not enough to confirm differential expression, so these genes should be treated as candidates for validation.
 
-`R/06_filter_sensitivity.R` adds an optional mean-count filter (`thresholds: min_rowmean`, off by default) at 0–100 on top of the LOQ filter (`results/filter_sensitivity.csv`); liver results are sensitive to it (e.g. perivenous 78 → 31 FDR hits at `rowMeans >= 50`).
+The script `R/06_filter_sensitivity.R` also tests an optional filter that keeps genes based on their mean count. This filter is set by `thresholds: min_rowmean` and is turned off by default. The liver results change with this filter. For example, the number of perivenous genes with FDR < 0.05 drops from 78 to 31 when genes need a mean count of at least 50.
 
-## Run
+## Running the Pipeline
+
+The pipeline runs on a synthetic example dataset by default. To run it on the published data instead, use `config_real.yml`.
 
 ```bash
-Rscript run_pipeline.R                                      # synthetic example data (default)
-GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R         # published data (GSE324193), in data/raw/
+Rscript run_pipeline.R                                      # synthetic example data
+GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R         # published data from GSE324193
 ```
 
-`data/raw/` holds the published study counts and metadata. `results/` tracks figures, QC, summaries and the primary pseudobulk tables; the larger intermediate tables regenerate when you run the pipeline. Needs R with `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, `pheatmap`.
+The `data/raw/` folder holds the published counts and metadata. The `results/` folder holds the figures, quality control files, summaries, and the primary pseudobulk tables. The larger intermediate tables are not stored in the repository, but they are created again each time the pipeline runs. The pipeline needs R with the `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, and `pheatmap` packages.
 
 ```
-R/00_setup.R               packages, config, ROI subsetting helper
-R/01_prepare_data.R        metadata + counts, animal ID, LOQ and ROI QC, design table
-R/02_qc_pca.R              ROI QC (Q3 vs background), per-ROI-type PCA, animal vs treatment variance
-R/03_run_dge.R             the three models, tables, volcano panels, ranked lists
-R/04_summary_figures.R     hits-per-method barplot, animal-level heatmaps of top genes
-R/05_label_swap_check.R    wrong-grouping false-positive check
-R/06_filter_sensitivity.R  optional mean-count filter sensitivity
+R/00_setup.R               loads packages, settings, and the ROI subsetting helper
+R/01_prepare_data.R        reads metadata and counts, then adds animal ID, LOQ, and ROI quality control
+R/02_qc_pca.R              plots Q3 against background and runs PCA for each ROI type
+R/03_run_dge.R             runs the three models and saves tables, volcano plots, and ranked gene lists
+R/04_summary_figures.R     plots significant genes per model and heatmaps of the top genes
+R/05_label_swap_check.R    reruns the primary model with the incorrect animal pairings
+R/06_filter_sensitivity.R  tests the optional mean count filter
 ```
 
-Outputs in `results/`: `dge_tables/` (per ROI per model), `dge_summary.csv`, `volcano/`, `heatmaps/`, `qc/`, `ranked_lists/` (pre-ranked `.rnk` for GSEA), `label_swap_check.csv`, `filter_sensitivity.csv`, `sessionInfo.txt`.
+Each run saves its outputs to `results/`. The `dge_tables/` folder holds one table per ROI type and model, and `dge_summary.csv` summarizes them. The `volcano/`, `heatmaps/`, and `qc/` folders hold the figures. The `ranked_lists/` folder holds ranked gene lists that can be used for GSEA. The label swap and filter checks are saved as `label_swap_check.csv` and `filter_sensitivity.csv`, and the R session details are saved in `sessionInfo.txt`.
 
-## Interpreting the results
+## Interpreting the Results
 
-- Report effect sizes and the top-ranked genes at the animal level; call them candidates, not findings.
-- Check `label_swap_check.csv`: if wrong pairings produce as many "significant" genes as the true one, the FDR from the true split is not informative.
-- Confirmation needs more animals (or an orthogonal assay such as RNAscope/qPCR on candidate genes).
+Because the study has only two animals per group, the genes reported here should be described as candidates rather than findings. The most useful outputs are the effect sizes and the top ranked genes at the animal level. Before relying on any result, check `label_swap_check.csv`. If the incorrect pairings produce as many significant genes as the true grouping, then the FDR from the true grouping is not informative. Confirming these candidates will require more animals or an independent method such as RNAscope or qPCR.
 
 ## References
 
