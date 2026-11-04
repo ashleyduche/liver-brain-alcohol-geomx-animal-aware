@@ -69,7 +69,7 @@ for (roi_name in names(cfg$rois)) {
   # Ranked gene list (signed -log10 p) for optional GSEA
   pseudobulk %>%
     mutate(rank_stat = sign(logFC) * -log10(pvalue)) %>%
-    arrange(desc(rank_stat)) %>%
+    arrange(dplyr::desc(rank_stat)) %>%
     select(gene, rank_stat) %>%
     write_tsv(file.path(cfg$paths$results_dir, "ranked_lists", paste0(roi_name, "_pseudobulk.rnk")))
 

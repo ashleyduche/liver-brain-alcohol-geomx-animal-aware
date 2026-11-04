@@ -8,7 +8,7 @@ colnames(raw_meta) <- as.character(raw_meta[header_row, ])
 # Keep one row per ROI and pull the animal ID out of each sample name
 meta <- raw_meta %>%
   select(`*library name`, `**tissue`, treatment, region, pathology) %>%   # the sheet has blank and duplicate headers
-  slice((header_row + 1):n()) %>%
+  dplyr::slice((header_row + 1):n()) %>%
   filter(!is.na(`**tissue`)) %>%
   transmute(
     sample_id = `*library name`,
