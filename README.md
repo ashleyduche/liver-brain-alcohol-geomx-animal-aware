@@ -1,6 +1,6 @@
 # Animal-aware GeoMx DGE: alcohol exposure in APP/PS1 liver and brain
 
-Re-analysis of a GeoMx whole-transcriptome spatial dataset (APP/PS1 mice, intragastric alcohol vs. control, 5 weeks; brain plaque-bearing/plaque-free cortex and hippocampus, liver periportal/perivenous) that treats the **animal**, not the ROI, as the experimental unit.
+Data: GEO [GSE324193](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE324193). Re-analysis of a GeoMx whole-transcriptome spatial dataset (APP/PS1 mice, intragastric alcohol vs. control, 5 weeks; brain plaque-bearing/plaque-free cortex and hippocampus, liver periportal/perivenous) that treats the **animal**, not the ROI, as the experimental unit.
 
 > [!WARNING]
 > **Exploratory analysis.** The study has **4 animals (2 control, 2 alcohol-treated)**. With n = 2 vs. 2 there are only 6 possible group labelings, so no permutation-based animal-level test can reach p < 0.05 (the smallest attainable two-sided p is 2/6 = 0.33). Parametric p-values at this n lean heavily on modeled variance and should be read as a ranking of candidate genes, not as evidence. See [Interpreting the results](#interpreting-the-results).
