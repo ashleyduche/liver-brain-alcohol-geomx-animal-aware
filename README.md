@@ -28,7 +28,7 @@ Rscript run_pipeline.R                                      # synthetic example 
 GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R         # real data, once placed in data/raw/
 ```
 
-`data/raw/` (real, unpublished counts and metadata) and `results/` are not tracked. Needs R with `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, `pheatmap`.
+`data/raw/` holds the published study counts and metadata. `results/` tracks figures, QC, summaries and the primary pseudobulk tables; the larger intermediate tables regenerate when you run the pipeline. Needs R with `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, `pheatmap`.
 
 ```
 R/00_setup.R               packages, config, ROI subsetting helper

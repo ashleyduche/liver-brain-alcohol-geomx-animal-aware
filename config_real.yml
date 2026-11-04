@@ -1,4 +1,4 @@
-# Real study data (local only, gitignored). Run: GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R
+# Published study data. Run: GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R
 paths:
   metadata_xlsx: "data/raw/MetaData.xlsx"
   metadata_sheet: "Metadata"
