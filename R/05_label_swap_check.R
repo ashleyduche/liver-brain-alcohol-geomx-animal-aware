@@ -1,8 +1,11 @@
 # With 2 vs 2 animals there are only 3 distinct ways to split them into two pairs.
 # Rerun the pseudobulk model on the 2 WRONG splits: any "significant" gene is a false positive,
 # so this shows how much to trust FDR calls from the true split.
-animal_ids <- c("6868", "6870", "6876", "6880")
-true_split   <- c("g1", "g1", "g2", "g2")   # 6868 + 6870 (alcohol) vs 6876 + 6880 (control)
+treated_animals <- sort(unique(meta$animal[meta$Group == "Alcohol-Treated"]))
+control_animals <- sort(unique(meta$animal[meta$Group == "Control"]))
+animal_ids <- c(treated_animals, control_animals)
+stopifnot(length(treated_animals) == 2, length(control_animals) == 2)
+true_split   <- c("g1", "g1", "g2", "g2")   # the 2 alcohol animals vs the 2 controls
 decoy_split1 <- c("g1", "g2", "g1", "g2")
 decoy_split2 <- c("g1", "g2", "g2", "g1")
 splits <- list(true = true_split, decoy1 = decoy_split1, decoy2 = decoy_split2)
@@ -13,10 +16,9 @@ for (roi_name in names(cfg$rois)) {
   roi_def  <- cfg$rois[[roi_name]]
   roi_data <- subset_roi(meta, counts, roi_def)
   animal_f <- factor(roi_data$coldata$animal)
-  stopifnot(identical(levels(animal_f), animal_ids))
-
   pb_counts <- roi_data$counts %*% model.matrix(~ 0 + animal_f)
   colnames(pb_counts) <- levels(animal_f)
+  pb_counts <- pb_counts[, animal_ids]
 
   for (split_name in names(splits)) {
     split_group <- factor(splits[[split_name]])
