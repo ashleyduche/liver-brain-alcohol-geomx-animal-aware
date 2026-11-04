@@ -1,0 +1,55 @@
+# ROI-level QC and PCA. Question: does the animal explain more variance than treatment?
+
+# Library size and detected genes per ROI
+qc <- meta %>%
+  mutate(lib_size       = colSums(counts),
+         genes_detected = colSums(counts > 0),
+         neg_probe      = as.numeric(neg_probe[meta$sample_id]))
+write_csv(qc, file.path(cfg$paths$results_dir, "qc", "roi_qc_metrics.csv"))
+
+png(file.path(cfg$paths$results_dir, "qc", "library_size_by_animal.png"), width = 1600, height = 900, res = 200)
+par(mar = c(9, 5, 2, 1))
+boxplot(lib_size ~ interaction(animal, Group), data = qc, las = 2, xlab = "",
+        ylab = "Library size (counts)", col = "grey85")
+dev.off()
+
+pca_variance <- tibble()
+
+for (roi_name in names(cfg$rois)) {
+  roi_def  <- cfg$rois[[roi_name]]
+  roi_data <- subset_roi(meta, counts, roi_def)
+  coldata  <- roi_data$coldata
+
+  y <- DGEList(roi_data$counts)
+  y <- y[filterByExpr(y, group = coldata$Group), ]
+  y <- calcNormFactors(y, method = "upperquartile")   # Q3, the NanoString GeoMx convention
+  logcpm <- cpm(y, log = TRUE, prior.count = 2)
+
+  pca <- prcomp(t(logcpm), scale. = TRUE)
+  pct <- round(100 * pca$sdev^2 / sum(pca$sdev^2), 1)
+
+  animals    <- factor(coldata$animal)
+  group_col  <- ifelse(coldata$Group == "Control", "forestgreen", "firebrick")
+  animal_pch <- c(15, 16, 17, 18)[as.integer(animals)]
+
+  png(file.path(cfg$paths$results_dir, "qc", paste0(roi_name, "_PCA.png")), width = 1000, height = 900, res = 150)
+  plot(pca$x[, 1], pca$x[, 2], col = group_col, pch = animal_pch, cex = 1.6,
+       xlab = paste0("PC1 (", pct[1], "%)"), ylab = paste0("PC2 (", pct[2], "%)"),
+       main = paste0(roi_def$label, " (ROI-level, Q3 logCPM)"))
+  legend("topright", legend = c(levels(coldata$Group), paste("animal", levels(animals))),
+         col = c("forestgreen", "firebrick", rep("black", 4)),
+         pch = c(16, 16, 15, 16, 17, 18)[1:(2 + nlevels(animals))], bty = "n", cex = 0.8)
+  dev.off()
+
+  # Variance of PC1/PC2 explained by animal vs treatment (animal is nested in treatment)
+  for (pc in c(1, 2)) {
+    r2_animal <- summary(lm(pca$x[, pc] ~ animals))$r.squared
+    r2_group  <- summary(lm(pca$x[, pc] ~ coldata$Group))$r.squared
+    pca_variance <- bind_rows(pca_variance,
+      tibble(roi = roi_name, PC = paste0("PC", pc), pct_var = pct[pc],
+             r2_animal = round(r2_animal, 3), r2_treatment = round(r2_group, 3)))
+  }
+}
+
+write_csv(pca_variance, file.path(cfg$paths$results_dir, "qc", "pca_variance_animal_vs_treatment.csv"))
+print(as.data.frame(pca_variance))

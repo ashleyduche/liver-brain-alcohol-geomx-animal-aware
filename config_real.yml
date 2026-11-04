@@ -1,0 +1,23 @@
+# Real study data (local only, gitignored). Run: GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R
+paths:
+  metadata_xlsx: "data/raw/MetaData.xlsx"
+  metadata_sheet: "Metadata"
+  raw_counts_csv: "data/raw/RawCounts_AllSamples.csv"
+  negative_probe: "NegProbe-WTX"
+  results_dir: "results"
+
+# Exploratory thresholds: nothing is expected to pass FDR with 2 vs 2 animals.
+thresholds:
+  fdr: 0.05
+  fdr_original: 0.01      # cutoff used in the original ROI-as-sample analysis, for comparison
+  nominal_p: 0.05
+  abs_log2fc: 0.32
+  top_genes_heatmap: 30
+
+rois:
+  plaqueCortex:    {tissue: brain, region: cortex,      pathology: plaque-bearing, label: "Plaque-bearing Cortex"}
+  nonplaqueCortex: {tissue: brain, region: cortex,      pathology: plaque-free,    label: "Plaque-free Cortex"}
+  plaqueHippo:     {tissue: brain, region: hippocampus, pathology: plaque-bearing, label: "Plaque-bearing Hippocampus"}
+  nonplaqueHippo:  {tissue: brain, region: hippocampus, pathology: plaque-free,    label: "Plaque-free Hippocampus"}
+  periportal:      {tissue: liver, region: periportal,  pathology: ~,              label: "Periportal Liver"}
+  perivenous:      {tissue: liver, region: perivenous,  pathology: ~,              label: "Perivenous Liver"}
