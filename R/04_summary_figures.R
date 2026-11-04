@@ -12,7 +12,7 @@ png(file.path(cfg$paths$results_dir, "fdr_hits_by_method.png"), width = 2000, he
 par(mar = c(10, 5, 3, 1))
 bp <- barplot(bar_mat, beside = TRUE, las = 2, col = c("grey60", "skyblue3", "darkorange"),
               ylab = paste0("Genes with FDR < ", cfg$thresholds$fdr),
-              main = "Significance depends on whether ROIs or animals are the replicate")
+              main = "Genes with FDR < 0.05 by model and ROI type")
 text(bp, bar_mat, labels = bar_mat, pos = 3, cex = 0.7, xpd = TRUE)
 legend("topleft", legend = rownames(bar_mat), fill = c("grey60", "skyblue3", "darkorange"), bty = "n", cex = 0.8)
 dev.off()

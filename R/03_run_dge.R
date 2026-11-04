@@ -1,5 +1,5 @@
 # Three models per ROI type, same genes/contrast (Alcohol-Treated vs Control):
-#   1. naive_DESeq2_ROIs        every ROI is a sample (the original analysis; pseudoreplicated)
+#   1. DESeq2_ROIs              every ROI is a sample, as in the published analysis
 #   2. voom_dupCor_ROIs         ROI-level limma-voom, animal as a correlated block
 #   3. pseudobulk_edgeR_animals ROIs summed per animal, edgeR QL F-test (n = 2 vs 2); PRIMARY result
 dge_dir <- file.path(cfg$paths$results_dir, "dge_tables")
@@ -12,12 +12,12 @@ for (roi_name in names(cfg$rois)) {
   roi_counts <- roi_data$counts
   cat(sprintf("\n=== %s: %d ROIs from %d animals ===\n", roi_name, nrow(coldata), n_distinct(coldata$animal)))
 
-  # ---- 1. naive DESeq2, ROIs as independent samples ----
+  # ---- 1. DESeq2 with each ROI as a sample (published approach) ----
   dds <- DESeqDataSetFromMatrix(countData = roi_counts, colData = coldata, design = ~ Group)
   dds <- dds[rowSums(counts(dds)) >= 10, ]
   dds <- DESeq(dds)
   res <- results(dds)
-  naive <- as_tibble(as.data.frame(res), rownames = "gene") %>%
+  deseq2_rois <- as_tibble(as.data.frame(res), rownames = "gene") %>%
     transmute(gene, logFC = log2FoldChange, pvalue, FDR = padj)
 
   # ---- 2. ROI-level voom with animal as random-like block ----
@@ -63,7 +63,7 @@ for (roi_name in names(cfg$rois)) {
     write_tsv(file.path(cfg$paths$results_dir, "ranked_lists", paste0(roi_name, "_pseudobulk.rnk")))
 
   # ---- save tables, summary counts, volcano panels ----
-  method_tables <- list(naive_DESeq2_ROIs = naive,
+  method_tables <- list(DESeq2_ROIs = deseq2_rois,
                         voom_dupCor_ROIs = voom_dupcor,
                         pseudobulk_edgeR_animals = pseudobulk)
 
