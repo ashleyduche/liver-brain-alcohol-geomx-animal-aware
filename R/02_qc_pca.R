@@ -2,10 +2,18 @@
 
 # Library size and detected genes per ROI
 qc <- meta %>%
-  mutate(lib_size       = colSums(counts),
-         genes_detected = colSums(counts > 0),
-         neg_probe      = as.numeric(neg_probe[meta$sample_id]))
+  mutate(lib_size = colSums(counts))
 write_csv(qc, file.path(cfg$paths$results_dir, "qc", "roi_qc_metrics.csv"))
+
+# Q3 vs negative-probe background (standard GeoMx QC plot); points near y = x are background-like
+tissue_col <- ifelse(qc$tissue == "brain", "purple", "darkorange")
+png(file.path(cfg$paths$results_dir, "qc", "q3_vs_negprobe.png"), width = 1000, height = 900, res = 150)
+plot(qc$neg_probe, qc$q3, log = "xy", col = tissue_col, pch = 16,
+     xlab = "NegProbe-WTX count (background)", ylab = "Q3 count (signal)",
+     main = "ROI signal vs background")
+abline(0, 1, lty = 2, col = "grey40")
+legend("topleft", legend = c("brain", "liver"), col = c("purple", "darkorange"), pch = 16, bty = "n")
+dev.off()
 
 png(file.path(cfg$paths$results_dir, "qc", "library_size_by_animal.png"), width = 1600, height = 900, res = 200)
 par(mar = c(9, 5, 2, 1))

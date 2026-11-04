@@ -28,6 +28,20 @@ storage.mode(counts) <- "integer"
 stopifnot(setequal(meta$sample_id, colnames(counts)))
 counts <- counts[, meta$sample_id]
 
+# GeoMx ROI QC: LOQ from the negative probe, Q3 signal vs background, gene detection rate.
+meta <- meta %>%
+  mutate(neg_probe       = as.numeric(neg_probe[sample_id]),
+         q3              = apply(counts, 2, quantile, probs = 0.75),
+         q3_to_neg       = q3 / neg_probe,
+         loq             = pmax(cfg$geomx$min_loq, neg_probe),
+         genes_above_loq = colMeans(sweep(counts, 2, loq, ">")))
+
+low_quality <- meta$genes_above_loq < cfg$geomx$roi_min_gene_detection
+cat(sprintf("ROI QC: %d of %d ROIs removed (< %.0f%% of genes above LOQ)\n",
+            sum(low_quality), nrow(meta), 100 * cfg$geomx$roi_min_gene_detection))
+meta   <- meta[!low_quality, ]
+counts <- counts[, meta$sample_id]
+
 # Design check: the animal, not the ROI, is the experimental unit.
 animal_design <- meta %>% distinct(animal, Group)
 cat("Animals per group:\n"); print(table(animal_design$Group))

@@ -7,8 +7,14 @@ paths:
   results_dir: "results"
 
 # Exploratory thresholds: nothing is expected to pass FDR with 2 vs 2 animals.
+# GeoMx QC (GeomxTools-style). LOQ per ROI = max(min_loq, NegProbe-WTX count).
+geomx:
+  min_loq: 2
+  roi_min_gene_detection: 0.10   # drop ROIs detecting < 10% of genes above LOQ
+  gene_detection_rate: 0.10      # keep genes above LOQ in >= 10% of an ROI type's ROIs
+
 thresholds:
-  min_rowmean: 50         # keep genes with mean count >= this across the ROI type's ROIs
+  min_rowmean: 0          # optional extra mean-count filter (0 = off); see R/06_filter_sensitivity.R
   fdr: 0.05
   fdr_original: 0.01      # cutoff used in the original ROI-as-sample analysis, for comparison
   nominal_p: 0.05
