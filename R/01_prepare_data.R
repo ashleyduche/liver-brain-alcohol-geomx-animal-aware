@@ -48,11 +48,14 @@ counts <- counts[, meta$sample_id]
 
 # Design check, since the animal and not the ROI is the experimental unit
 animal_design <- meta %>% distinct(animal, Group)
-cat("Animals per group:\n")
-print(table(animal_design$Group))
+# capture.output turns each table into text so cat prints the header and table together
+cat("Animals per group:\n",
+    paste(capture.output(table(animal_design$Group)), collapse = "\n"), "\n",
+    sep = "")
 
-cat("\nROIs per animal x ROI type:\n")
-print(table(meta$animal, paste(meta$region, meta$pathology, sep = "_")))
+cat("\nROIs per animal x ROI type:\n",
+    paste(capture.output(table(meta$animal, paste(meta$region, meta$pathology, sep = "_"))), collapse = "\n"), "\n",
+    sep = "")
 
 saveRDS(list(meta = meta, counts = counts, neg_probe = neg_probe),
         file.path(cfg$paths$results_dir, "processed", "prepared_data.rds"))
