@@ -65,6 +65,7 @@ for (roi_name in names(cfg$rois)) {
                 cluster_columns = FALSE,
                 column_split = animal_group$Group,
                 row_split = direction,
+                row_title = NULL,
                 show_row_names = show_names,
                 row_names_gp = gpar(fontsize = 8),
                 column_names_rot = 0,
