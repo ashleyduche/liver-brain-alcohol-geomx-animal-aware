@@ -12,8 +12,8 @@ bar_mat <- bar_mat[, names(cfg$rois)]
 png(file.path(cfg$paths$results_dir, "fdr_hits_by_method.png"), width = 2000, height = 1000, res = 200)
 par(mar = c(10, 5, 3, 1))
 bp <- barplot(bar_mat, beside = TRUE, las = 2, col = c("grey60", "skyblue3", "darkorange"),
-              ylab = paste0("Genes with FDR < ", cfg$thresholds$fdr),
-              main = "Genes with FDR < 0.05 by model and ROI type")
+              ylab = paste0("Genes with FDR <= ", cfg$thresholds$fdr),
+              main = paste0("Genes with FDR <= ", cfg$thresholds$fdr, " by model and ROI type"))
 text(bp, bar_mat, labels = bar_mat, pos = 3, cex = 0.7, xpd = TRUE)
 legend("topleft", legend = rownames(bar_mat), fill = c("grey60", "skyblue3", "darkorange"), bty = "n", cex = 0.8)
 dev.off()
@@ -30,7 +30,7 @@ for (roi_name in names(cfg$rois)) {
                      show_col_types = FALSE)
 
   degs <- tab %>%
-    filter(FDR < cfg$thresholds$fdr, abs(logFC) > cfg$thresholds$abs_log2fc) %>%
+    filter(FDR <= cfg$thresholds$fdr, abs(logFC) > cfg$thresholds$abs_log2fc) %>%
     mutate(direction = if_else(logFC > 0, "Up", "Down"))
 
   # Remove any heatmap left from an earlier run so a skipped ROI type has no old figure
@@ -69,7 +69,7 @@ for (roi_name in names(cfg$rois)) {
                 row_names_gp = gpar(fontsize = 8),
                 column_names_rot = 0,
                 column_names_centered = TRUE,
-                column_title = paste0(roi_def$label, "\n", nrow(z_mat), " pseudobulk DEGs (FDR < ", cfg$thresholds$fdr,
+                column_title = paste0(roi_def$label, "\n", nrow(z_mat), " pseudobulk DEGs (FDR <= ", cfg$thresholds$fdr,
                                       ", |log2FC| > ", cfg$thresholds$abs_log2fc, ")"),
                 column_title_gp = gpar(fontsize = 10, fontface = "bold"))
 

@@ -90,14 +90,14 @@ for (roi_name in names(cfg$rois)) {
       method         = method,
       genes_tested   = sum(!is.na(tab$pvalue)),
       n_nominal_p    = sum(tab$pvalue < cfg$thresholds$nominal_p, na.rm = TRUE),
-      n_fdr          = sum(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE),
-      n_fdr_original = sum(tab$FDR <= cfg$thresholds$fdr_original & abs(tab$logFC) > cfg$thresholds$abs_log2fc, na.rm = TRUE),
+      n_fdr          = sum(tab$FDR <= cfg$thresholds$fdr, na.rm = TRUE),
+      n_deg          = sum(tab$FDR <= cfg$thresholds$fdr & abs(tab$logFC) > cfg$thresholds$abs_log2fc, na.rm = TRUE),
       min_fdr        = min(tab$FDR, na.rm = TRUE)
     ))
 
     # Red for up and blue for down when a gene passes FDR and the fold change cutoff
-    is_up   <- tab$FDR < cfg$thresholds$fdr & tab$logFC >  cfg$thresholds$abs_log2fc
-    is_down <- tab$FDR < cfg$thresholds$fdr & tab$logFC < -cfg$thresholds$abs_log2fc
+    is_up   <- tab$FDR <= cfg$thresholds$fdr & tab$logFC >  cfg$thresholds$abs_log2fc
+    is_down <- tab$FDR <= cfg$thresholds$fdr & tab$logFC < -cfg$thresholds$abs_log2fc
     pt_col <- case_when(is_up ~ "red", is_down ~ "blue", TRUE ~ "grey70")
 
     # Draw the grey genes first so the colored genes sit on top
@@ -105,15 +105,15 @@ for (roi_name in names(cfg$rois)) {
 
     plot(tab$logFC[draw_order], -log10(tab$pvalue[draw_order]), col = pt_col[draw_order], pch = 20,
          xlab = "log2 fold change (Alcohol vs Control)", ylab = "-log10(p value)",
-         main = paste0(method, "\n", sum(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE), " genes FDR < ", cfg$thresholds$fdr,
+         main = paste0(method, "\n", sum(tab$FDR <= cfg$thresholds$fdr, na.rm = TRUE), " genes FDR <= ", cfg$thresholds$fdr,
                        "\n", sum(is_up, na.rm = TRUE), " up (red) and ", sum(is_down, na.rm = TRUE),
                        " down (blue) past |log2FC| ", cfg$thresholds$abs_log2fc),
          cex.main = 0.85)
     abline(v = c(-cfg$thresholds$abs_log2fc, cfg$thresholds$abs_log2fc), lty = 2, col = "grey40")
 
     # The horizontal line marks the largest p value that still passes FDR, when any gene passes
-    if (any(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE)) {
-      abline(h = -log10(max(tab$pvalue[which(tab$FDR < cfg$thresholds$fdr)])), lty = 2, col = "grey40")
+    if (any(tab$FDR <= cfg$thresholds$fdr, na.rm = TRUE)) {
+      abline(h = -log10(max(tab$pvalue[which(tab$FDR <= cfg$thresholds$fdr)])), lty = 2, col = "grey40")
     }
   }
   dev.off()

@@ -15,8 +15,7 @@ geomx:
 
 thresholds:
   min_rowmean: 0          # optional extra mean-count filter (0 = off); see R/06_filter_sensitivity.R
-  fdr: 0.05
-  fdr_original: 0.01      # cutoff used in the original ROI-as-sample analysis, for comparison
+  fdr: 0.01               # FDR <= 0.01, the same cutoff as the original analysis
   nominal_p: 0.05
   abs_log2fc: 0.32
   min_degs_heatmap: 10

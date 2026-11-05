@@ -40,7 +40,7 @@ for (roi_name in names(cfg$rois)) {
     swap_summary <- bind_rows(swap_summary, tibble(
       roi = roi_name, split = split_name,
       n_nominal_p = sum(tt$PValue < cfg$thresholds$nominal_p),
-      n_fdr = sum(tt$FDR < cfg$thresholds$fdr)))
+      n_fdr = sum(tt$FDR <= cfg$thresholds$fdr)))
   }
 }
 

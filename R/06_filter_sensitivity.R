@@ -29,7 +29,7 @@ for (roi_name in names(cfg$rois)) {
       genes_kept   = nrow(roi_data$counts),
       genes_tested = nrow(tt),
       n_nominal_p  = sum(tt$PValue < cfg$thresholds$nominal_p),
-      n_fdr        = sum(tt$FDR < cfg$thresholds$fdr)))
+      n_fdr        = sum(tt$FDR <= cfg$thresholds$fdr)))
   }
 }
 

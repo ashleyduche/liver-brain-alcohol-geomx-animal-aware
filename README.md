@@ -50,20 +50,20 @@ The script `R/05_label_swap_check.R` reruns the pseudobulk model on each incorre
 
 ## Results
 
-The table below shows the results from the primary pseudobulk model.
+The table below shows the results from the primary pseudobulk model. Genes are called significant at FDR ≤ 0.01, which is the same cutoff used in the original analysis.
 
-| ROI type | Genes tested | Genes with FDR < 0.05 | Genes with FDR < 0.05 using the two incorrect pairings |
+| ROI type | Genes tested | Genes with FDR ≤ 0.01 | Genes with FDR ≤ 0.01 using the two incorrect pairings |
 |---|---|---|---|
-| plaqueCortex | 15570 | 1 | 3 / 1 |
-| nonplaqueCortex | 18549 | 1 | 19 / 8 |
-| plaqueHippo | 16624 | 1993 | 0 / 0 |
+| plaqueCortex | 15570 | 1 | 0 / 0 |
+| nonplaqueCortex | 18549 | 0 | 7 / 5 |
+| plaqueHippo | 16624 | 527 | 0 / 0 |
 | nonplaqueHippo | 17024 | 0 | 0 / 0 |
-| periportal | 19303 | 9 | 823 / 8 |
-| perivenous | 18235 | 78 | 12 / 23 |
+| periportal | 19303 | 7 | 284 / 5 |
+| perivenous | 18235 | 45 | 2 / 16 |
 
-The plaque bearing hippocampus is the only ROI type where the true grouping produces far more significant genes than the incorrect pairings. In the periportal liver, one incorrect pairing produced 823 significant genes compared with 9 for the true grouping, so the periportal results at the animal level should be interpreted carefully. With two animals per group, the genes found here are best treated as candidates for further validation.
+The plaque bearing hippocampus is the only ROI type where the true grouping produces far more significant genes than the incorrect pairings. The perivenous liver also produces more significant genes than either incorrect pairing, but the difference is smaller. In the periportal liver, one incorrect pairing produced 284 significant genes compared with 7 for the true grouping, so the periportal results at the animal level should be interpreted carefully. With two animals per group, the genes found here are best treated as candidates for further validation.
 
-The script `R/06_filter_sensitivity.R` also tests an optional filter that keeps genes based on their mean count. This filter is set by `thresholds: min_rowmean` and is turned off by default. The liver results change with this filter. For example, the number of perivenous genes with FDR < 0.05 drops from 78 to 31 when genes need a mean count of at least 50.
+The script `R/06_filter_sensitivity.R` also tests an optional filter that keeps genes based on their mean count. This filter is set by `thresholds: min_rowmean` and is turned off by default. The liver results change with this filter. For example, the number of perivenous genes with FDR ≤ 0.01 drops from 45 to 10 when genes need a mean count of at least 50.
 
 ## Running the Pipeline
 
@@ -86,7 +86,7 @@ R/05_label_swap_check.R    reruns the primary model with the incorrect animal pa
 R/06_filter_sensitivity.R  tests the optional mean count filter
 ```
 
-Each run saves its outputs to `results/`. The `dge_tables/` folder holds one table per ROI type and model, and `dge_summary.csv` summarizes them. The `volcano/`, `heatmaps/`, and `qc/` folders hold the figures. A heatmap is only drawn for ROI types with more than 10 pseudobulk DEGs, which are genes with FDR < 0.05 and an absolute log2 fold change above 0.32. The `ranked_lists/` folder holds ranked gene lists that can be used for GSEA. The label swap and filter checks are saved as `label_swap_check.csv` and `filter_sensitivity.csv`, and the R session details are saved in `sessionInfo.txt`.
+Each run saves its outputs to `results/`. The `dge_tables/` folder holds one table per ROI type and model, and `dge_summary.csv` summarizes them. The `volcano/`, `heatmaps/`, and `qc/` folders hold the figures. A heatmap is only drawn for ROI types with more than 10 pseudobulk DEGs, which are genes with FDR ≤ 0.01 and an absolute log2 fold change above 0.32. The `ranked_lists/` folder holds ranked gene lists that can be used for GSEA. The label swap and filter checks are saved as `label_swap_check.csv` and `filter_sensitivity.csv`, and the R session details are saved in `sessionInfo.txt`.
 
 ## Interpreting the Results
 
