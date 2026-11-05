@@ -79,7 +79,7 @@ for (roi_name in names(cfg$rois)) {
                         pseudobulk_edgeR_animals = pseudobulk)
 
   png(file.path(cfg$paths$results_dir, "volcano", paste0(roi_name, "_Volcano.png")), width = 2400, height = 850, res = 200)
-  par(mfrow = c(1, 3), mar = c(4.5, 4.5, 3, 1))
+  par(mfrow = c(1, 3), mar = c(4.5, 4.5, 4.5, 1))
 
   for (method in names(method_tables)) {
     tab <- method_tables[[method]]
@@ -95,19 +95,26 @@ for (roi_name in names(cfg$rois)) {
       min_fdr        = min(tab$FDR, na.rm = TRUE)
     ))
 
-    # Red for up, blue for down, and circles around genes that pass FDR
-    pt_col <- case_when(
-      tab$pvalue < cfg$thresholds$nominal_p & tab$logFC >  cfg$thresholds$abs_log2fc ~ "red",
-      tab$pvalue < cfg$thresholds$nominal_p & tab$logFC < -cfg$thresholds$abs_log2fc ~ "blue",
-      TRUE ~ "grey70")
+    # Red for up and blue for down when a gene passes FDR and the fold change cutoff
+    is_up   <- tab$FDR < cfg$thresholds$fdr & tab$logFC >  cfg$thresholds$abs_log2fc
+    is_down <- tab$FDR < cfg$thresholds$fdr & tab$logFC < -cfg$thresholds$abs_log2fc
+    pt_col <- case_when(is_up ~ "red", is_down ~ "blue", TRUE ~ "grey70")
 
-    plot(tab$logFC, -log10(tab$pvalue), col = pt_col, pch = 20,
-         xlab = "log2 fold change (Alcohol vs Control)", ylab = "-log10(nominal p)",
-         main = paste0(method, "\n", sum(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE), " genes FDR < ", cfg$thresholds$fdr),
+    # Draw the grey genes first so the colored genes sit on top
+    draw_order <- order(pt_col != "grey70")
+
+    plot(tab$logFC[draw_order], -log10(tab$pvalue[draw_order]), col = pt_col[draw_order], pch = 20,
+         xlab = "log2 fold change (Alcohol vs Control)", ylab = "-log10(p value)",
+         main = paste0(method, "\n", sum(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE), " genes FDR < ", cfg$thresholds$fdr,
+                       "\n", sum(is_up, na.rm = TRUE), " up (red) and ", sum(is_down, na.rm = TRUE),
+                       " down (blue) past |log2FC| ", cfg$thresholds$abs_log2fc),
          cex.main = 0.85)
     abline(v = c(-cfg$thresholds$abs_log2fc, cfg$thresholds$abs_log2fc), lty = 2, col = "grey40")
-    abline(h = -log10(cfg$thresholds$nominal_p), lty = 2, col = "grey40")
-    points(tab$logFC[which(tab$FDR < cfg$thresholds$fdr)], -log10(tab$pvalue[which(tab$FDR < cfg$thresholds$fdr)]), pch = 1, cex = 1.3)
+
+    # The horizontal line marks the largest p value that still passes FDR, when any gene passes
+    if (any(tab$FDR < cfg$thresholds$fdr, na.rm = TRUE)) {
+      abline(h = -log10(max(tab$pvalue[which(tab$FDR < cfg$thresholds$fdr)])), lty = 2, col = "grey40")
+    }
   }
   dev.off()
 }

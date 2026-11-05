@@ -2,7 +2,7 @@ suppressPackageStartupMessages({
   library(edgeR)
   library(limma)
   library(DESeq2)
-  library(pheatmap)
+  library(ComplexHeatmap)
   library(readxl)
   library(yaml)
   library(tidyverse)   # loaded last so dplyr verbs like slice, select and filter are not masked by Bioconductor

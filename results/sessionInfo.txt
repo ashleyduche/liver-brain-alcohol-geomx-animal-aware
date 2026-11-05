@@ -13,8 +13,8 @@ time zone: America/Los_Angeles
 tzcode source: internal
 
 attached base packages:
-[1] stats4    stats     graphics  grDevices utils     datasets  methods  
-[8] base     
+[1] grid      stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
 
 other attached packages:
  [1] lubridate_1.9.4             forcats_1.0.0              
@@ -23,7 +23,7 @@ other attached packages:
  [7] tidyr_1.3.1                 tibble_3.3.0               
  [9] ggplot2_4.0.3               tidyverse_2.0.0            
 [11] yaml_2.3.10                 readxl_1.4.5               
-[13] pheatmap_1.0.13             DESeq2_1.42.1              
+[13] ComplexHeatmap_2.18.0       DESeq2_1.42.1              
 [15] SummarizedExperiment_1.32.0 Biobase_2.62.0             
 [17] MatrixGenerics_1.14.0       matrixStats_1.5.0          
 [19] GenomicRanges_1.54.1        GenomeInfoDb_1.38.8        
@@ -32,19 +32,23 @@ other attached packages:
 [25] limma_3.58.1               
 
 loaded via a namespace (and not attached):
- [1] gtable_0.3.6            lattice_0.22-5          tzdb_0.5.0             
- [4] vctrs_0.6.5             tools_4.3.3             bitops_1.0-9           
- [7] generics_0.1.4          parallel_4.3.3          pkgconfig_2.0.3        
-[10] Matrix_1.6-5            RColorBrewer_1.1-3      S7_0.2.0               
-[13] lifecycle_1.0.5         GenomeInfoDbData_1.2.11 compiler_4.3.3         
-[16] farver_2.1.2            statmod_1.5.0           codetools_0.2-19       
-[19] RCurl_1.98-1.17         pillar_1.11.0           crayon_1.5.3           
-[22] BiocParallel_1.36.0     DelayedArray_0.28.0     abind_1.4-8            
-[25] tidyselect_1.2.1        locfit_1.5-9.12         stringi_1.8.7          
-[28] splines_4.3.3           grid_4.3.3              cli_3.6.5              
-[31] SparseArray_1.2.4       magrittr_2.0.3          S4Arrays_1.2.1         
-[34] withr_3.0.3             scales_1.4.0            bit64_4.6.0-1          
-[37] timechange_0.3.0        XVector_0.42.0          bit_4.6.0              
-[40] cellranger_1.1.0        hms_1.1.3               rlang_1.1.6            
-[43] Rcpp_1.1.0              glue_1.8.0              vroom_1.6.5            
-[46] R6_2.6.1                zlibbioc_1.48.2        
+ [1] tidyselect_1.2.1        farver_2.1.2            S7_0.2.0               
+ [4] bitops_1.0-9            RCurl_1.98-1.17         digest_0.6.37          
+ [7] timechange_0.3.0        lifecycle_1.0.5         cluster_2.1.6          
+[10] statmod_1.5.0           magrittr_2.0.3          compiler_4.3.3         
+[13] rlang_1.1.6             tools_4.3.3             S4Arrays_1.2.1         
+[16] bit_4.6.0               DelayedArray_0.28.0     RColorBrewer_1.1-3     
+[19] abind_1.4-8             BiocParallel_1.36.0     withr_3.0.3            
+[22] colorspace_2.1-1        scales_1.4.0            iterators_1.0.14       
+[25] cli_3.6.5               crayon_1.5.3            generics_0.1.4         
+[28] tzdb_0.5.0              rjson_0.2.23            splines_4.3.3          
+[31] zlibbioc_1.48.2         parallel_4.3.3          cellranger_1.1.0       
+[34] XVector_0.42.0          vctrs_0.6.5             Matrix_1.6-5           
+[37] GetoptLong_1.0.5        hms_1.1.3               bit64_4.6.0-1          
+[40] clue_0.3-66             locfit_1.5-9.12         foreach_1.5.2          
+[43] glue_1.8.0              codetools_0.2-19        stringi_1.8.7          
+[46] shape_1.4.6.1           gtable_0.3.6            pillar_1.11.0          
+[49] GenomeInfoDbData_1.2.11 circlize_0.4.16         R6_2.6.1               
+[52] doParallel_1.0.17       vroom_1.6.5             lattice_0.22-5         
+[55] png_0.1-8               Rcpp_1.1.0              SparseArray_1.2.4      
+[58] pkgconfig_2.0.3         GlobalOptions_0.1.2    

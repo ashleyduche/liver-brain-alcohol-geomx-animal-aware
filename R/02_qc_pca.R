@@ -9,19 +9,33 @@ write_csv(qc, file.path(cfg$paths$results_dir, "qc", "roi_qc_metrics.csv"))
 # Points close to the y = x line are close to background
 tissue_col <- ifelse(qc$tissue == "brain", "purple", "darkorange")
 
+# Both axes share limits that start at 1 so the y = x line is always inside the plot
+# A NegProbe count of 0 is drawn at 1 since a log axis cannot show 0
+neg_plot  <- pmax(qc$neg_probe, 1)
+axis_lims <- c(1, max(c(neg_plot, qc$q3)) * 1.5)
+
 png(file.path(cfg$paths$results_dir, "qc", "q3_vs_negprobe.png"), width = 1000, height = 900, res = 150)
-plot(qc$neg_probe, qc$q3, log = "xy", col = tissue_col, pch = 16,
+plot(neg_plot, qc$q3, log = "xy", col = tissue_col, pch = 16,
+     xlim = axis_lims, ylim = axis_lims,
      xlab = "NegProbe-WTX count (background)", ylab = "Q3 count (signal)",
      main = "ROI signal vs background")
 abline(0, 1, lty = 2, col = "grey40")
-legend("topleft", legend = c("brain", "liver"), col = c("purple", "darkorange"), pch = 16, bty = "n")
+legend("bottomright", legend = c("brain", "liver", "y = x (signal equals background)"),
+       col = c("purple", "darkorange", "grey40"), pch = c(16, 16, NA), lty = c(NA, NA, 2), bty = "n")
 dev.off()
 
-# Library size for each animal
+# Library size for each animal, ordered and colored by group
+animal_order <- qc %>% distinct(animal, Group) %>% arrange(Group, animal)
+qc_box <- qc %>% mutate(animal = factor(animal, levels = animal_order$animal))
+box_col <- ifelse(animal_order$Group == "Control", "forestgreen", "firebrick")
+
 png(file.path(cfg$paths$results_dir, "qc", "library_size_by_animal.png"), width = 1600, height = 900, res = 200)
-par(mar = c(9, 5, 2, 1))
-boxplot(lib_size ~ interaction(animal, Group), data = qc, las = 2, xlab = "",
-        ylab = "Library size (counts)", col = "grey85")
+par(mar = c(4.5, 6, 2, 1))
+boxplot(lib_size / 1e6 ~ animal, data = qc_box, col = adjustcolor(box_col, alpha.f = 0.5),
+        xlab = "Animal", ylab = "Library size (million counts)",
+        main = "Library size per ROI, by animal")
+legend("topright", legend = levels(qc$Group), fill = adjustcolor(c("forestgreen", "firebrick"), alpha.f = 0.5),
+       bty = "n", cex = 0.8)
 dev.off()
 
 # PCA for each ROI type
@@ -45,13 +59,20 @@ for (roi_name in names(cfg$rois)) {
   group_col  <- ifelse(coldata$Group == "Control", "forestgreen", "firebrick")
   animal_pch <- c(15, 16, 17, 18)[as.integer(animals)]
 
-  png(file.path(cfg$paths$results_dir, "qc", paste0(roi_name, "_PCA.png")), width = 1000, height = 900, res = 150)
+  # Each animal's shape in the legend is drawn in its group color
+  legend_group <- coldata %>% distinct(animal, Group) %>% arrange(animal)
+  legend_col   <- ifelse(legend_group$Group == "Control", "forestgreen", "firebrick")
+
+  # Legend sits in the right margin so it never covers points
+  png(file.path(cfg$paths$results_dir, "qc", paste0(roi_name, "_PCA.png")), width = 1200, height = 900, res = 150)
+  par(mar = c(5, 5, 4, 11))
   plot(pca$x[, 1], pca$x[, 2], col = group_col, pch = animal_pch, cex = 1.6,
        xlab = paste0("PC1 (", pct[1], "%)"), ylab = paste0("PC2 (", pct[2], "%)"),
        main = paste0(roi_def$label, " (ROI-level, Q3 logCPM)"))
-  legend("topright", legend = c(levels(coldata$Group), paste("animal", levels(animals))),
-         col = c("forestgreen", "firebrick", rep("black", 4)),
-         pch = c(16, 16, 15, 16, 17, 18)[1:(2 + nlevels(animals))], bty = "n", cex = 0.8)
+  legend("topleft", inset = c(1.02, 0), xpd = TRUE, title = "Animal",
+         legend = paste0(legend_group$animal, " (", legend_group$Group, ")"),
+         col = legend_col, pch = c(15, 16, 17, 18)[seq_len(nrow(legend_group))],
+         pt.cex = 1.4, bty = "n", cex = 0.8)
   dev.off()
 
   # Variance of PC1 and PC2 explained by animal compared with treatment (animal is nested in treatment)

@@ -33,10 +33,27 @@ for (roi_name in names(cfg$rois)) {
   # Look up each animal's group and put the controls first
   animal_group <- meta %>% distinct(animal, Group) %>% arrange(Group, animal)
   mat <- mat[, animal_group$animal]
-  col_anno <- data.frame(Group = animal_group$Group, row.names = animal_group$animal)
 
-  pheatmap(mat, scale = "row", cluster_cols = FALSE, annotation_col = col_anno,
-           main = paste0(roi_def$label, ": top ", nrow(mat), " genes by nominal p (animal-level)"),
-           filename = file.path(cfg$paths$results_dir, "heatmaps", paste0(roi_name, "_top_genes.png")),
-           width = 6, height = 8)
+  # Z-score each gene across animals so the color shows up or down relative to that gene's mean
+  z_mat <- t(scale(t(mat)))
+
+  # Group bar on top in the same colors as the PCA plots
+  top_anno <- HeatmapAnnotation(Group = animal_group$Group,
+                                col = list(Group = c("Control" = "forestgreen", "Alcohol-Treated" = "firebrick")))
+
+  # Leaving col unset keeps the ComplexHeatmap default of blue, white and red
+  ht <- Heatmap(z_mat, name = "Row z-score",
+                top_annotation = top_anno,
+                cluster_columns = FALSE,
+                column_split = animal_group$Group,
+                row_names_gp = gpar(fontsize = 8),
+                column_names_rot = 0,
+                column_names_centered = TRUE,
+                column_title = paste0(roi_def$label, "\ntop ", nrow(z_mat), " genes by pseudobulk p value"),
+                column_title_gp = gpar(fontsize = 10, fontface = "bold"))
+
+  png(file.path(cfg$paths$results_dir, "heatmaps", paste0(roi_name, "_top_genes.png")),
+      width = 1200, height = 1800, res = 200)
+  draw(ht, merge_legend = TRUE)
+  dev.off()
 }

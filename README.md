@@ -74,14 +74,14 @@ Rscript run_pipeline.R                                      # synthetic example 
 GEOMX_CONFIG=config_real.yml Rscript run_pipeline.R         # published data from GSE324193
 ```
 
-The `data/raw/` folder holds the published counts and metadata. The `results/` folder holds the figures, quality control files, summaries, and the primary pseudobulk tables. The larger intermediate tables are not stored in the repository, but they are created again each time the pipeline runs. The pipeline needs R with the `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, and `pheatmap` packages.
+The `data/raw/` folder holds the published counts and metadata. The `results/` folder holds the figures, quality control files, summaries, and the primary pseudobulk tables. The larger intermediate tables are not stored in the repository, but they are created again each time the pipeline runs. The pipeline needs R with the `tidyverse`, `readxl`, `yaml`, `edgeR`, `limma`, `DESeq2`, and `ComplexHeatmap` packages.
 
 ```
 R/00_setup.R               loads packages, settings, and the ROI subsetting helper
 R/01_prepare_data.R        reads metadata and counts, then adds animal ID, LOQ, and ROI quality control
 R/02_qc_pca.R              plots Q3 against background and runs PCA for each ROI type
 R/03_run_dge.R             runs the three models and saves tables, volcano plots, and ranked gene lists
-R/04_summary_figures.R     plots significant genes per model and heatmaps of the top genes
+R/04_summary_figures.R     plots significant genes per model and ComplexHeatmap heatmaps of the top genes
 R/05_label_swap_check.R    reruns the primary model with the incorrect animal pairings
 R/06_filter_sensitivity.R  tests the optional mean count filter
 ```
