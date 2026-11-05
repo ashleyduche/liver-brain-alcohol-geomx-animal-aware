@@ -104,7 +104,7 @@ for (roi_name in names(cfg$rois)) {
     draw_order <- order(pt_col != "grey70")
 
     plot(tab$logFC[draw_order], -log10(tab$pvalue[draw_order]), col = pt_col[draw_order], pch = 20,
-         xlab = "log2 fold change (Alcohol vs Control)", ylab = "-log10(p value)",
+         xlab = "log2 fold change (Alcohol vs Control)", ylab = "-log10(p-value)",
          main = paste0(method, "\n", sum(tab$FDR <= cfg$thresholds$fdr, na.rm = TRUE), " genes FDR <= ", cfg$thresholds$fdr,
                        "\n", sum(is_up, na.rm = TRUE), " up (red) and ", sum(is_down, na.rm = TRUE),
                        " down (blue) past |log2FC| ", cfg$thresholds$abs_log2fc),
