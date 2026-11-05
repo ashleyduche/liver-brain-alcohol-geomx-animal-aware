@@ -86,7 +86,7 @@ R/05_label_swap_check.R    reruns the primary model with the incorrect animal pa
 R/06_filter_sensitivity.R  tests the optional mean count filter
 ```
 
-Each run saves its outputs to `results/`. The `dge_tables/` folder holds one table per ROI type and model, and `dge_summary.csv` summarizes them. The `volcano/`, `heatmaps/`, and `qc/` folders hold the figures. A heatmap is only drawn for ROI types with more than 5 pseudobulk DEGs, which are genes with FDR ≤ 0.01 and an absolute log2 fold change above 0.32. The `ranked_lists/` folder holds ranked gene lists that can be used for GSEA. The label swap and filter checks are saved as `label_swap_check.csv` and `filter_sensitivity.csv`, and the R session details are saved in `sessionInfo.txt`.
+Each run saves its outputs to `results/`. The `dge_tables/` folder holds one table per ROI type and model, and `dge_summary.csv` summarizes them. The `volcano/`, `heatmaps/`, and `qc/` folders hold the figures. A heatmap is only drawn for ROI types with more than 10 pseudobulk DEGs, which are genes with FDR ≤ 0.01 and an absolute log2 fold change above 0.32. The `ranked_lists/` folder holds ranked gene lists that can be used for GSEA. The label swap and filter checks are saved as `label_swap_check.csv` and `filter_sensitivity.csv`, and the R session details are saved in `sessionInfo.txt`.
 
 ## Interpreting the Results
 

@@ -18,7 +18,7 @@ thresholds:
   fdr: 0.01               # FDR <= 0.01, the same cutoff as the original analysis
   nominal_p: 0.05
   abs_log2fc: 0.32
-  min_degs_heatmap: 5
+  min_degs_heatmap: 10
   max_heatmap_row_names: 50
 
 rois:
