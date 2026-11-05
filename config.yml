@@ -19,7 +19,8 @@ thresholds:
   fdr_original: 0.01      # cutoff used in the original ROI-as-sample analysis, for comparison
   nominal_p: 0.05
   abs_log2fc: 0.32
-  top_genes_heatmap: 30
+  min_degs_heatmap: 10
+  max_heatmap_row_names: 50
 
 rois:
   plaqueCortex:    {tissue: brain, region: cortex,      pathology: plaque-bearing, label: "Plaque-bearing Cortex"}
